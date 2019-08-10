@@ -7,7 +7,7 @@ module.exports = {
 
         const userExists = await Dev.findOne({ user: username });
         if (userExists) {
-            res.json({ok: false, user: userExists});
+            res.json(userExists);
             return;
         }
 
@@ -22,7 +22,7 @@ module.exports = {
             avatar
         });
 
-        return res.json({ ok: true, user: dev});
+        return res.json(dev);
     },
     async list(req, res) {
         const { user } = req.headers;
