@@ -1,4 +1,5 @@
 import React, { useState , useEffect } from 'react';
+import io from 'socket.io-client';
 import AsyncStorage from '@react-native-community/async-storage';
 import { View, SafeAreaView, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
@@ -8,11 +9,13 @@ import api from '../services/api';
 import logo from '../assets/logo.png';
 import likeImage from '../assets/like.png';
 import dislikeImage from '../assets/dislike.png';
+import itIsAMatchImage from '../assets/itsamatch.png';
 
 export default function Main({ navigation }) {
     const id = navigation.getParam('user')
 
-    const [users, setUsers] = useState([]); 
+    const [users, setUsers] = useState([]);
+    const [matchDev, setMatchDev] = useState(null); 
 
     useEffect(() => {
         async function loadUsers() {
@@ -26,6 +29,17 @@ export default function Main({ navigation }) {
         }
 
         loadUsers();
+    }, [id]);
+
+
+    useEffect(() => {
+        const socket = io('http://localhost:3333', {
+            query: { user: id }
+        });
+
+        socket.on('match', dev => {
+            setMatchDev(dev)
+        })
     }, [id]);
 
     async function handleLike() {
@@ -85,6 +99,20 @@ export default function Main({ navigation }) {
                 </TouchableOpacity>
             </View> 
             )}
+
+            { matchDev && (
+                <View style={styles.matchContainer}>
+                    <Image style={styles.matchImage} source={itIsAMatchImage} />
+                    <Image style={styles.matchAvatar} source={{ uri: matchDev.avatar }} />
+                    <Text style={styles.matchName}>{matchDev.name}</Text>
+                    <Text style={styles.matchBio}>{matchDev.bio}</Text>
+                    
+                    <TouchableOpacity onPress={() => setMatchDev(null)}>
+                        <Text style={styles.closeMatch}>Fechar</Text>
+                    </TouchableOpacity>
+                </View>
+            )
+            }
         </SafeAreaView>
     )
 }
@@ -173,6 +201,48 @@ const styles = StyleSheet.create({
             width: 0,
             height: 2
         }
+    },
+
+    matchContainer: {
+        ... StyleSheet.absoluteFillObject, //Aplica todos os modificadores para dentro do matchContainer
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    matchImage: {
+        resizeMode: 'contain',
+        height: 60,
+    },
+    matchAvatar: {
+        width: 160,
+        height: 160,
+        borderRadius: 80,
+        borderWidth: 5,
+        borderColor: '#fff',
+        marginVertical: 30
+    },
+
+    matchName: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#FFF'
+    },
+
+    matchBio: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.8)',
+        lineHeight: 24,
+        textAlign: 'center',
+        paddingHorizontal: 30,
+        marginTop: 8,
+    },
+
+    closeMatch: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.8)',
+        lineHeight: 24,
+        textAlign: 'center',
+        fontWeight: 'bold'
     }
 })
 

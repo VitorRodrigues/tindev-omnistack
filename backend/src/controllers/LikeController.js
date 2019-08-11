@@ -18,6 +18,20 @@ module.exports = {
 
         if (targetDev.likes.includes(loggedDev._id)) {
             console.log("It's a match!")
+            const loggedSocket = req.connectedUsers[user];
+            const targetSocket = req.connectedUsers[devId];
+
+            if (loggedSocket) {
+                req.io.to(loggedSocket).emit('match', targetDev);
+            } else {
+                // Push notification :)
+            }
+
+            if (targetSocket) {
+                req.io.to(targetSocket).emit('match', loggedDev);
+            } else {
+                // Push notification :)
+            }
         }
 
         loggedDev.likes.push(targetDev._id);

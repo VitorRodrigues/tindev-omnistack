@@ -4,14 +4,29 @@ const cors = require('cors');
 
 const routes = require('./routes');
 
-const server = express();
+const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
 
-mongoose.connect('mongodb+srv://tindev:123Mudar@clustertindev-9kvlv.mongodb.net/omnistack8?retryWrites=true&w=majority', {
+const connectedUsers = {} //id do user : id do socket
+
+io.on('connection', socket => {
+    const { user } = socket.handshake.query; //user = user._id
+    connectedUsers[user] = socket.id
+})
+
+mongoose.connect('<your mongodb connection string>', {
     useNewUrlParser: true
 })
 
-server.use(cors());
-server.use(express.json());
-server.use(routes);
+app.use((req, res, next) => {
+    req.io = io //passa o IO para facilitar o uso dentro de controllers
+    req.connectedUsers = connectedUsers //também para facilitar dentro das controllers
+    return next()
+})
+
+app.use(cors());
+app.use(express.json());
+app.use(routes);
 
 server.listen(3333);
